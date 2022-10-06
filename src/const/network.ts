@@ -26,6 +26,8 @@ export class ChainConfig {
   windowSize: number;
   nativeTokenDecimals: number;
   nativeTokenSymbol?: string;
+  throttleCount: number;
+  throttleInterval: number; // throttle count / interval
 }
 
 const chainConfigs: ChainConfig[] = [
@@ -40,6 +42,8 @@ const chainConfigs: ChainConfig[] = [
     windowSize: 500000,
     nativeTokenDecimals: 18,
     nativeTokenSymbol: 'ETH',
+    throttleCount: 5,
+    throttleInterval: 2000,
   },
   {
     network: Network.Avalanche,
@@ -52,6 +56,8 @@ const chainConfigs: ChainConfig[] = [
     windowSize: 2000,
     nativeTokenDecimals: 18,
     nativeTokenSymbol: 'AVAX',
+    throttleCount: 5,
+    throttleInterval: 2000,
   },
   {
     network: Network.Meter,
@@ -64,6 +70,8 @@ const chainConfigs: ChainConfig[] = [
     windowSize: 1000000,
     nativeTokenDecimals: 18,
     nativeTokenSymbol: 'MTR',
+    throttleCount: 5,
+    throttleInterval: 2000,
   },
   {
     network: Network.BSC,
@@ -76,6 +84,8 @@ const chainConfigs: ChainConfig[] = [
     windowSize: 5000,
     nativeTokenDecimals: 18,
     nativeTokenSymbol: 'BNB',
+    throttleCount: 5,
+    throttleInterval: 2000,
   },
   {
     network: Network.Moonriver,
@@ -88,6 +98,8 @@ const chainConfigs: ChainConfig[] = [
     windowSize: 5000,
     nativeTokenDecimals: 18,
     nativeTokenSymbol: 'MOVR',
+    throttleCount: 5,
+    throttleInterval: 2000,
   },
   {
     network: Network.Theta,
@@ -100,6 +112,8 @@ const chainConfigs: ChainConfig[] = [
     windowSize: 5000,
     nativeTokenSymbol: 'TFUEL',
     nativeTokenDecimals: 18,
+    throttleCount: 5,
+    throttleInterval: 2000,
   },
   {
     network: Network.Polis,
@@ -112,6 +126,8 @@ const chainConfigs: ChainConfig[] = [
     windowSize: 10000,
     nativeTokenSymbol: 'POLIS',
     nativeTokenDecimals: 18,
+    throttleCount: 5,
+    throttleInterval: 2000,
   },
   {
     network: Network.EnergyWeb,
@@ -124,6 +140,8 @@ const chainConfigs: ChainConfig[] = [
     windowSize: 10000,
     nativeTokenSymbol: 'EWT',
     nativeTokenDecimals: 18,
+    throttleCount: 5,
+    throttleInterval: 2000,
   },
   {
     network: Network.Moonbeam,
@@ -136,6 +154,8 @@ const chainConfigs: ChainConfig[] = [
     windowSize: 10000,
     nativeTokenSymbol: 'GLMR',
     nativeTokenDecimals: 18,
+    throttleCount: 5,
+    throttleInterval: 2000,
   },
   {
     network: Network.Polygon,
@@ -148,6 +168,8 @@ const chainConfigs: ChainConfig[] = [
     windowSize: 10000,
     nativeTokenSymbol: 'MATIC',
     nativeTokenDecimals: 18,
+    throttleCount: 5,
+    throttleInterval: 2000,
   },
 ];
 

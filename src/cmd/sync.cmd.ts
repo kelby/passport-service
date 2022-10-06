@@ -24,11 +24,11 @@ export class SyncCMD extends CMD {
   private logger = Logger.createLogger({ name: this.name });
   private network: Network;
   private config: ChainConfig;
-  private mtrChainId: number;
   private provider: ethers.providers.JsonRpcProvider;
   private bridge: Bridge;
   private depositKey = '';
   private proposalKey = '';
+  private rpcTimestamps = [];
 
   private depositRepo = new DepositRepo();
   private proposalRepo = new ProposalRepo();
@@ -94,21 +94,35 @@ export class SyncCMD extends CMD {
         // sleep for rate limit
         const fastforward =
           bestNum > dStartNum + this.config.windowSize && bestNum > pStartNum + this.config.windowSize;
-        if (!fastforward) {
-          if (n % (Number(SLOW_INTERVAL) / Number(FAST_INTERVAL)) != 0) {
-            this.logger.info(`Skip to fetch on ${Network[this.config.network]} (non-fast-forward) n=${n}`);
-            continue;
-          }
-        }
 
         this.logger.info(`Start to fetch on ${Network[this.config.network]}`);
 
         if (dEndNum - dStartNum > MIN_WINDOW_SIZE) {
+          const now = new Date().getTime();
+          if (this.rpcTimestamps.length === this.config.throttleCount) {
+            this.rpcTimestamps.shift();
+            const elapse = now - this.rpcTimestamps[0];
+            if (elapse < this.config.throttleInterval) {
+              this.logger.debug({ interval: this.config.throttleInterval - elapse }, 'sleep due to throttling');
+              await sleep(this.config.throttleInterval - elapse);
+            }
+          }
+          this.rpcTimestamps.push(new Date().getTime());
           await this.fetchDeposits(dStartNum, dEndNum);
           await this.headRepo.upsert(this.depositKey, dEndNum);
         }
 
         if (bestNum - pStartNum > MIN_WINDOW_SIZE) {
+          const now = new Date().getTime();
+          if (this.rpcTimestamps.length === this.config.throttleCount) {
+            this.rpcTimestamps.shift();
+            const elapse = now - this.rpcTimestamps[0];
+            if (elapse < this.config.throttleInterval) {
+              this.logger.debug({ interval: this.config.throttleInterval - elapse }, 'sleep due to throttling');
+              await sleep(this.config.throttleInterval - elapse);
+            }
+          }
+          this.rpcTimestamps.push(new Date().getTime());
           await this.fetchProposals(pStartNum, pEndNum);
           await this.headRepo.upsert(this.proposalKey, pEndNum);
         }
