@@ -1,18 +1,17 @@
 import { ethers } from 'ethers';
 
 export enum Network {
-  Ethereum = 'Ethereum',
-  Avalanche = 'Avalanche',
-  Meter = 'Meter',
-  Moonriver = 'Moonriver',
-  Theta = 'Theta',
-  BSC = 'BSC',
-  EnergyWeb = 'EnergyWeb',
-  Polis = 'Polis',
-  Moonbeam = 'Moonbeam',
-  Polygon = 'Polygon',
+  ethereum = 'ethereum',
+  avalanche = 'avalanche',
+  meter = 'meter',
+  moonriver = 'moonriver',
+  theta = 'theta',
+  bsc = 'bsc',
+  energyweb = 'energyweb',
+  polis = 'polis',
+  moonbeam = 'moonbeam',
+  polygon = 'polygon',
 }
-
 export class ChainConfig {
   network: Network;
   chainId: number;
@@ -32,7 +31,7 @@ export class ChainConfig {
 
 const chainConfigs: ChainConfig[] = [
   {
-    network: Network.Ethereum,
+    network: Network.ethereum,
     rpcUrl: 'https://mainnet.infura.io/v3/2ad4eeb4c6a14a88b7b16872a0404a9a',
     chainId: 1,
     networkId: 1,
@@ -46,7 +45,7 @@ const chainConfigs: ChainConfig[] = [
     throttleInterval: 2000,
   },
   {
-    network: Network.Avalanche,
+    network: Network.avalanche,
     rpcUrl: 'https://api.avax.network/ext/bc/C/rpc',
     chainId: 2,
     networkId: 43114,
@@ -60,7 +59,7 @@ const chainConfigs: ChainConfig[] = [
     throttleInterval: 2000,
   },
   {
-    network: Network.Meter,
+    network: Network.meter,
     rpcUrl: 'https://rpc.meter.io',
     chainId: 3,
     networkId: 82,
@@ -74,7 +73,7 @@ const chainConfigs: ChainConfig[] = [
     throttleInterval: 2000,
   },
   {
-    network: Network.BSC,
+    network: Network.bsc,
     rpcUrl: 'https://bsc-dataseed.binance.org/',
     chainId: 4,
     networkId: 56,
@@ -88,7 +87,7 @@ const chainConfigs: ChainConfig[] = [
     throttleInterval: 2000,
   },
   {
-    network: Network.Moonriver,
+    network: Network.moonriver,
     rpcUrl: 'https://moonriver.api.onfinality.io/public',
     chainId: 5,
     networkId: 1285,
@@ -102,7 +101,7 @@ const chainConfigs: ChainConfig[] = [
     throttleInterval: 2000,
   },
   {
-    network: Network.Theta,
+    network: Network.theta,
     rpcUrl: 'https://eth-rpc-api.thetatoken.org/rpc',
     chainId: 6,
     networkId: 361,
@@ -116,7 +115,7 @@ const chainConfigs: ChainConfig[] = [
     throttleInterval: 2000,
   },
   {
-    network: Network.Polis,
+    network: Network.polis,
     rpcUrl: 'https://rpc.polis.tech',
     chainId: 7,
     networkId: 333999,
@@ -130,7 +129,7 @@ const chainConfigs: ChainConfig[] = [
     throttleInterval: 2000,
   },
   {
-    network: Network.EnergyWeb,
+    network: Network.energyweb,
     rpcUrl: 'https://rpc.energyweb.org',
     chainId: 8,
     networkId: 246,
@@ -144,7 +143,7 @@ const chainConfigs: ChainConfig[] = [
     throttleInterval: 2000,
   },
   {
-    network: Network.Moonbeam,
+    network: Network.moonbeam,
     rpcUrl: 'https://moonbeam.api.onfinality.io/public',
     chainId: 9,
     networkId: 1284,
@@ -158,7 +157,7 @@ const chainConfigs: ChainConfig[] = [
     throttleInterval: 2000,
   },
   {
-    network: Network.Polygon,
+    network: Network.polygon,
     rpcUrl: 'https://polygon-rpc.com',
     chainId: 10,
     networkId: 137,

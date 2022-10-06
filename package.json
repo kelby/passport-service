@@ -1,6 +1,6 @@
 {
-  "name": "@meterio/bridge-sync",
-  "version": "0.1.5",
+  "name": "@meterio/bridgev2-sync",
+  "version": "0.0.1",
   "description": "Sync meter passport deposit/proposal info into mongo",
   "license": "MIT",
   "readmeFilename": "README.md",
@@ -21,14 +21,12 @@
     "sync",
     "Defi",
     "passport",
-    "bridge",
-    "rebate"
+    "bridge"
   ],
   "devDependencies": {
     "@types/axios": "^0.14.0",
     "@types/bunyan": "^1.8.7",
-    "@types/node": "^16.4.10",
-    "import-sort-style-module": "^6.0.0",
+    "@types/node": "^18.8.0",
     "prettier": "^2.3.2",
     "prettier-plugin-import-sort": "~0.0.7",
     "ts-node": "^10.1.0",
@@ -36,26 +34,26 @@
   },
   "dependencies": {
     "@meterio/devkit": "^1.4.9",
-    "axios": "^0.21.1",
+    "axios": "^1.1.0",
     "bignumber.js": "^9.0.1",
     "bunyan": "^1.8.14",
-    "csv-parse": "^4.16.0",
-    "csv-stringify": "^5.6.2",
+    "commander": "^9.4.1",
+    "csv-parse": "^5.3.0",
+    "csv-stringify": "^6.2.0",
     "csv-writer": "^1.6.0",
-    "dotenv": "^10.0.0",
+    "dotenv": "^16.0.0",
     "envalid": "^7.1.1",
     "ethers": "^5.4.3",
     "meterify": "^1.4.6",
     "mongoose": "^5.13.5",
-    "reflect-metadata": "^0.1.10",
-    "web3": "~1.2.11"
+    "reflect-metadata": "^0.1.10"
   },
   "scripts": {
     "start": "ts-node src/main.ts",
     "build": "rm -fr dist && tsc -p ."
   },
   "bin": {
-    "bridge-sync": "dist/src/main.js"
+    "bridge-cli": "dist/src/main.js"
   },
   "importSort": {
     ".js, .jsx, .ts, .tsx": {

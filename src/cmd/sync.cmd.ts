@@ -15,7 +15,7 @@ import { InterruptedError, sleep } from '../utils';
 import { CMD } from './cmd';
 
 const MIN_WINDOW_SIZE = 6;
-const { FAST_INTERVAL, SLOW_INTERVAL } = process.env;
+const FAST_INTERVAL = 5000;
 
 export class SyncCMD extends CMD {
   private shutdown = false;
@@ -52,6 +52,19 @@ export class SyncCMD extends CMD {
     await this.loop();
   }
 
+  private async throttle() {
+    const now = new Date().getTime();
+    if (this.rpcTimestamps.length === this.config.throttleCount) {
+      this.rpcTimestamps.shift();
+      const elapse = now - this.rpcTimestamps[0];
+      if (elapse < this.config.throttleInterval) {
+        this.logger.debug({ interval: this.config.throttleInterval - elapse }, 'sleep due to throttling');
+        await sleep(this.config.throttleInterval - elapse);
+      }
+    }
+    this.rpcTimestamps.push(new Date().getTime());
+  }
+
   private async loop() {
     for (;;) {
       try {
@@ -69,6 +82,7 @@ export class SyncCMD extends CMD {
         const dhead = depositHead ? depositHead.num + 1 : 0;
         const phead = proposalHead ? proposalHead.num + 1 : 0;
 
+        await this.throttle();
         const bestNum = await this.provider.getBlockNumber();
 
         // jumpstart if needed
@@ -91,38 +105,14 @@ export class SyncCMD extends CMD {
         const pStartNum = phead;
         const pEndNum = bestNum > pStartNum + this.config.windowSize ? pStartNum + this.config.windowSize - 1 : bestNum;
 
-        // sleep for rate limit
-        const fastforward =
-          bestNum > dStartNum + this.config.windowSize && bestNum > pStartNum + this.config.windowSize;
-
-        this.logger.info(`Start to fetch on ${Network[this.config.network]}`);
-
         if (dEndNum - dStartNum > MIN_WINDOW_SIZE) {
-          const now = new Date().getTime();
-          if (this.rpcTimestamps.length === this.config.throttleCount) {
-            this.rpcTimestamps.shift();
-            const elapse = now - this.rpcTimestamps[0];
-            if (elapse < this.config.throttleInterval) {
-              this.logger.debug({ interval: this.config.throttleInterval - elapse }, 'sleep due to throttling');
-              await sleep(this.config.throttleInterval - elapse);
-            }
-          }
-          this.rpcTimestamps.push(new Date().getTime());
+          await this.throttle();
           await this.fetchDeposits(dStartNum, dEndNum);
           await this.headRepo.upsert(this.depositKey, dEndNum);
         }
 
         if (bestNum - pStartNum > MIN_WINDOW_SIZE) {
-          const now = new Date().getTime();
-          if (this.rpcTimestamps.length === this.config.throttleCount) {
-            this.rpcTimestamps.shift();
-            const elapse = now - this.rpcTimestamps[0];
-            if (elapse < this.config.throttleInterval) {
-              this.logger.debug({ interval: this.config.throttleInterval - elapse }, 'sleep due to throttling');
-              await sleep(this.config.throttleInterval - elapse);
-            }
-          }
-          this.rpcTimestamps.push(new Date().getTime());
+          await this.throttle();
           await this.fetchProposals(pStartNum, pEndNum);
           await this.headRepo.upsert(this.proposalKey, pEndNum);
         }
@@ -382,14 +372,5 @@ export class SyncCMD extends CMD {
       }
       await this.headRepo.upsert(this.depositKey, d.blockNumber);
     }
-  }
-
-  public stop() {
-    this.shutdown = true;
-
-    return new Promise((resolve) => {
-      this.logger.info('shutting down......');
-      this.ev.on('closed', resolve);
-    });
   }
 }
