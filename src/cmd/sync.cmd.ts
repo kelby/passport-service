@@ -3,18 +3,14 @@ import { EventEmitter } from 'events';
 import { BigNumber } from 'bignumber.js';
 import * as Logger from 'bunyan';
 import { ethers, utils } from 'ethers';
-import { _toEscapedUtf8String } from 'ethers/lib/utils';
 
-import { Bridge, Bridge__factory } from '../bridgeTypes';
 import { ChainConfig, Network, ProposalStatus, getChainConfig, getChainConfigByChainId } from '../const';
-import { Proposal } from '../model/proposal.interface';
-import { DepositRepo } from '../repo/deposit.repo';
-import HeadRepo from '../repo/head.repo';
-import { ProposalRepo } from '../repo/proposal.repo';
-import { InterruptedError, sleep } from '../utils';
+import { Deposit, Proposal } from '../model';
+import { DepositRepo, HeadRepo, ProposalRepo } from '../repo';
+import { Bridge, Bridge__factory } from '../typechain';
+import { InterruptedError, decodeCalldata, sleep } from '../utils';
 import { CMD } from './cmd';
 
-const MIN_WINDOW_SIZE = 6;
 const FAST_INTERVAL = 5000;
 
 export class SyncCMD extends CMD {
@@ -28,17 +24,21 @@ export class SyncCMD extends CMD {
   private bridge: Bridge;
   private depositKey = '';
   private proposalKey = '';
+  private targetKey = '';
   private rpcTimestamps = [];
 
   private depositRepo = new DepositRepo();
   private proposalRepo = new ProposalRepo();
   private headRepo = new HeadRepo();
 
+  private dormentInterval = 0;
+
   constructor(network: Network) {
     super();
     this.network = network;
     this.depositKey = `${this.network}_deposit`.toLowerCase();
     this.proposalKey = `${this.network}_proposal`.toLowerCase();
+    this.targetKey = `${this.network}_target`.toLowerCase();
     delete this.logger.fields.hostname;
     delete this.logger.fields.pid;
   }
@@ -46,9 +46,11 @@ export class SyncCMD extends CMD {
   public async start() {
     this.logger.info(`${this.name}: start`);
     this.config = getChainConfig(this.network);
+    this.dormentInterval = this.config.avgBlockTime * this.config.windowSize * 1000;
     this.provider = new ethers.providers.JsonRpcProvider(this.config.rpcUrl);
     this.bridge = Bridge__factory.connect(this.config.bridgeAddress, this.provider);
 
+    await this.init();
     await this.loop();
   }
 
@@ -65,56 +67,99 @@ export class SyncCMD extends CMD {
     this.rpcTimestamps.push(new Date().getTime());
   }
 
+  private calcEnd(start, end, step: number) {
+    if (start > end) {
+      return start;
+    }
+    const actualEnd = end > start + step ? start + step - 1 : end;
+    return actualEnd;
+  }
+
+  private async init() {
+    const depositHead = await this.headRepo.findByKey(this.depositKey);
+    const proposalHead = await this.headRepo.findByKey(this.proposalKey);
+    const targetHead = await this.headRepo.findByKey(this.targetKey);
+
+    const dhead = depositHead ? depositHead.num + 1 : 0;
+    const phead = proposalHead ? proposalHead.num + 1 : 0;
+
+    await this.throttle();
+    const bestNum = await this.provider.getBlockNumber();
+
+    // jumpstart if needed
+    if (dhead < this.config.startBlockNum) {
+      this.logger.info(`Jump start deposit sync to ${this.config.startBlockNum} on ${Network[this.config.network]}`);
+      await this.headRepo.upsert(this.depositKey, this.config.startBlockNum);
+    }
+    if (phead < this.config.startBlockNum) {
+      this.logger.info(`Jump start proposal sync to ${this.config.startBlockNum} on ${Network[this.config.network]}`);
+      await this.headRepo.upsert(this.proposalKey, this.config.startBlockNum);
+    }
+    if (!targetHead || targetHead.num <= 0) {
+      this.logger.info(`Set target head with current best num: ${bestNum}`);
+      await this.headRepo.upsert(this.targetKey, bestNum);
+    }
+  }
+
   private async loop() {
+    let pDormentTime = 0;
+    let dDormentTime = 0;
     for (;;) {
       try {
         if (this.shutdown) {
           throw new InterruptedError();
         }
 
-        if (this.shutdown) {
-          throw new InterruptedError();
-        }
-
         const depositHead = await this.headRepo.findByKey(this.depositKey);
         const proposalHead = await this.headRepo.findByKey(this.proposalKey);
+        const targetHead = await this.headRepo.findByKey(this.targetKey);
+        let targetNum = targetHead.num;
 
-        const dhead = depositHead ? depositHead.num + 1 : 0;
-        const phead = proposalHead ? proposalHead.num + 1 : 0;
+        const dhead = depositHead.num + 1;
+        const phead = proposalHead.num + 1;
+        const now = new Date().getTime();
 
-        await this.throttle();
-        const bestNum = await this.provider.getBlockNumber();
-
-        // jumpstart if needed
-        let jumpstart = false;
-        if (dhead < this.config.startBlockNum) {
-          await this.headRepo.upsert(this.depositKey, this.config.startBlockNum);
-          jumpstart = true;
-        }
-        if (phead < this.config.startBlockNum) {
-          await this.headRepo.upsert(this.proposalKey, this.config.startBlockNum);
-          jumpstart = true;
-        }
-        if (jumpstart) {
-          this.logger.info(`Jump start to ${this.config.startBlockNum} on ${Network[this.config.network]}`);
-          continue;
-        }
-
-        const dStartNum = dhead;
-        const dEndNum = bestNum > dStartNum + this.config.windowSize ? dStartNum + this.config.windowSize - 1 : bestNum;
-        const pStartNum = phead;
-        const pEndNum = bestNum > pStartNum + this.config.windowSize ? pStartNum + this.config.windowSize - 1 : bestNum;
-
-        if (dEndNum - dStartNum > MIN_WINDOW_SIZE) {
+        // target head updated, catch-up now
+        if (!targetHead || targetHead.num <= 0) {
+          this.logger.info(targetHead, 'target head update detected');
           await this.throttle();
-          await this.fetchDeposits(dStartNum, dEndNum);
-          await this.headRepo.upsert(this.depositKey, dEndNum);
+          targetNum = await this.provider.getBlockNumber();
+          await this.headRepo.upsert(this.targetKey, targetNum);
         }
 
-        if (bestNum - pStartNum > MIN_WINDOW_SIZE) {
+        // wake up from dorment
+        if (now - dDormentTime >= this.dormentInterval || now - pDormentTime >= this.dormentInterval) {
+          this.logger.info({ dormented: now - dDormentTime, pDormented: now - pDormentTime }, 'wake up from dorment');
           await this.throttle();
-          await this.fetchProposals(pStartNum, pEndNum);
-          await this.headRepo.upsert(this.proposalKey, pEndNum);
+          targetNum = await this.provider.getBlockNumber();
+          await this.headRepo.upsert(this.targetKey, targetNum);
+
+          dDormentTime = 0;
+          pDormentTime = 0;
+        }
+
+        if (dhead < targetNum) {
+          const dtail = this.calcEnd(dhead, targetNum, this.config.windowSize);
+          await this.throttle();
+          await this.fetchDeposits(dhead, dtail);
+          await this.headRepo.upsert(this.depositKey, dtail);
+        } else {
+          if (dDormentTime === 0) {
+            dDormentTime = new Date().getTime();
+            this.logger.info({ targetNum, dhead }, 'dorment deposit sync');
+          }
+        }
+
+        if (phead < targetNum) {
+          const ptail = this.calcEnd(phead, targetNum, this.config.windowSize);
+          await this.throttle();
+          await this.fetchProposals(phead, ptail);
+          await this.headRepo.upsert(this.proposalKey, ptail);
+        } else {
+          if (pDormentTime === 0) {
+            pDormentTime = new Date().getTime();
+          }
+          this.logger.info({ targetNum, phead }, 'dorment proposal sync');
         }
 
         await sleep(Number(FAST_INTERVAL));
@@ -132,7 +177,7 @@ export class SyncCMD extends CMD {
   }
 
   public async fetchProposals(startNum: string | number, endNum: string | number) {
-    const event = this.bridge.filters.ProposalEvent();
+    const event = this.bridge.filters.ProposalEvent(null, null, null, null);
 
     this.logger.info(
       { from: startNum, to: endNum, len: Number(endNum) - Number(startNum) + 1, network: Network[this.config.network] },
@@ -148,49 +193,37 @@ export class SyncCMD extends CMD {
         break;
       }
       if (!p.args) {
-        this.logger.error(p, 'Error during process proposal event');
+        this.logger.error(p, 'Error parsing proposal event');
         continue;
       }
 
-      const id = {
-        blockNum: p.blockNumber,
-        homeChainId: p.args.originChainID,
-        destChainId: this.config.chainId,
+      const key = {
+        home: p.args.originDomainId,
+        dest: this.config.chainId,
         nonce: new BigNumber(p.args.depositNonce.toString()).toNumber(),
       };
-      const savedProposal = await this.depositRepo.findByTx(p.transactionHash);
-      if (savedProposal) {
-        console.log(`skip current ProposalEvent, existed # ${i + 1}/${proposals.length}`);
+      const existTx = await this.depositRepo.findByTx(p.transactionHash);
+      if (existTx) {
+        console.log(`skip current ProposalEvent, existed tx # ${i + 1}/${proposals.length}`);
         continue;
       }
 
-      this.logger.info(id, `Start to process ProposalEvent`);
+      this.logger.info(key, `Start to process ProposalEvent`);
 
-      const proposal = await this.proposalRepo.findByTx(p.transactionHash);
+      const proposal = await this.proposalRepo.findByKey(key);
 
       if (proposal) {
         if (proposal.blockNum < p.blockNumber || proposal.status != p.args.status) {
           proposal.status = Number(p.args.status) as ProposalStatus;
           await proposal.save();
-          this.logger.info(id, `Update status to ${ProposalStatus[proposal.status]}`);
+          this.logger.info(key, `Update status to ${ProposalStatus[proposal.status]}`);
         } else {
-          this.logger.info(id, `skip proposal, existed`);
+          this.logger.info(key, `skip proposal, existed`);
         }
         continue;
       }
 
-      const tx = await p.getTransaction();
-      if (!tx || !tx.to) {
-        this.logger.error(id, 'Could not get proposal tx');
-        continue;
-      }
-      if (!tx.data.startsWith('0x4454b20d')) {
-        console.log('this is not a executeProposal call');
-        continue;
-      }
-
-      console.log('decode proposal for tx: ', tx);
-      const decoded = this.decodeProposal(tx.data);
+      const decoded = decodeCalldata(p.args.data);
       if (!decoded) {
         continue;
       }
@@ -199,15 +232,11 @@ export class SyncCMD extends CMD {
 
       const newProposal = {
         network: this.config.network,
-        homeChainId: p.args?.originChainID,
-        destChainId: this.config.chainId,
-        depositNonce: new BigNumber(p.args?.depositNonce.toString()).toNumber(),
-        destBridgeAddr: this.config.bridgeAddress.toLocaleLowerCase(),
+        key,
 
-        resourceId: p.args?.resourceID,
-        dataHash: p.args?.dataHash,
-
-        status: p.args?.status,
+        resourceId: p.args.resourceID,
+        dataHash: p.args.dataHash,
+        status: p.args.status as ProposalStatus,
 
         txHash: p.transactionHash,
         blockNum: p.blockNumber,
@@ -216,62 +245,15 @@ export class SyncCMD extends CMD {
         toAddr: decoded.toAddr,
         amount: decoded.amount,
       } as Proposal;
-      const exist = await this.proposalRepo.exists(
-        newProposal.homeChainId,
-        newProposal.destChainId,
-        newProposal.depositNonce,
-        newProposal.destBridgeAddr
-      );
-      if (!exist) {
-        await this.proposalRepo.create(newProposal);
-        this.logger.info(newProposal, `Proposal saved.`);
-      } else {
-        this.logger.info(newProposal, `Proposal exists`);
-      }
+
+      await this.proposalRepo.create(newProposal);
+      this.logger.info(newProposal, `Proposal saved.`);
       await this.headRepo.upsert(this.proposalKey, p.blockNumber);
     }
   }
 
-  public decodeDeposit(data) {
-    const decoded = utils.defaultAbiCoder.decode(['uint8', 'bytes32', 'bytes'], utils.hexDataSlice(data, 4));
-    const resourceID = decoded[1];
-    console.log(`resourceID in Deposit: ${resourceID}`);
-
-    let calldata = decoded[2].toString();
-    const len = 2 + 32 * 3 * 2 - calldata.length;
-    if (len < 0) {
-      console.log(`Invalid len: `, len, 'skip now');
-      return;
-    }
-    calldata = decoded[2] + '0'.repeat(len);
-    const decodedData = utils.defaultAbiCoder.decode(['uint256', 'uint64', 'bytes32'], calldata);
-
-    const toAddr = utils.hexDataSlice(decodedData[2], 0, decodedData[1].toNumber());
-    const amount = new BigNumber(decodedData[0].toString());
-    return { toAddr, amount, resourceID };
-  }
-
-  public decodeProposal(data) {
-    const decoded = utils.defaultAbiCoder.decode(['uint8', 'uint64', 'bytes', 'bytes32'], utils.hexDataSlice(data, 4));
-    const resourceID = decoded[3].toLowerCase();
-    console.log('resourceID in Proposal: ', resourceID);
-    let calldata = decoded[2];
-
-    const len = 2 + 32 * 3 * 2 - calldata.length;
-    if (len < 0) {
-      console.log('Invalid len: ', len, 'skip now');
-      return;
-    }
-    calldata = decoded[2] + '0'.repeat(len);
-    const decodedData = utils.defaultAbiCoder.decode(['uint256', 'uint64', 'bytes32'], calldata);
-
-    const toAddr = utils.hexDataSlice(decodedData[2], 0, decodedData[1].toNumber()).toLowerCase();
-    const amount = new BigNumber(decodedData[0].toString());
-    return { toAddr, amount, resourceID };
-  }
-
   public async fetchDeposits(startNum: string | number, endNum: string | number) {
-    const event = this.bridge.filters.Deposit();
+    const event = this.bridge.filters.Deposit(null, null, null, null, null, null);
 
     this.logger.info(
       { from: startNum, to: endNum, len: Number(endNum) - Number(startNum) + 1, network: Network[this.config.network] },
@@ -288,51 +270,42 @@ export class SyncCMD extends CMD {
       }
 
       if (!d.args) {
-        this.logger.error(d, 'Error during get args in deposit event');
+        this.logger.error(d, 'Error parsing deposit event');
         continue;
       }
-      const did = {
-        blockNum: d.blockNumber,
-        homeChainId: this.config.chainId,
-        destChainId: d.args.destinationChainID,
-        depositNonce: new BigNumber(d.args.depositNonce.toString()).toFixed(0),
+      const key = {
+        home: this.config.chainId,
+        dest: d.args.destinationChainID,
+        nonce: new BigNumber(d.args.depositNonce.toString()).toNumber(),
       };
-      const savedDeposit = await this.depositRepo.findByTx(d.transactionHash);
-      if (savedDeposit) {
+      const existTx = await this.depositRepo.existsTx(d.transactionHash);
+      if (existTx) {
+        console.log(`skip current Deposit, existed tx# ${i + 1}/${deposits.length}`);
+        continue;
+      }
+      const exist = await this.depositRepo.exists(key);
+      if (exist) {
         console.log(`skip current Deposit, existed # ${i + 1}/${deposits.length}`);
         continue;
       }
 
-      this.logger.info(did, `start to process Deposit, # ${i + 1}/${deposits.length}`);
+      this.logger.info(key, `start to process Deposit, # ${i + 1}/${deposits.length}`);
 
-      const tx = await d.getTransaction();
-      if (!tx || !tx.to) {
-        this.logger.error(did, 'Could not get deposit tx');
-        continue;
-      }
-
-      if (tx.to.toLowerCase() !== this.config.bridgeAddress.toLowerCase()) {
-        this.logger.info(
-          { txTo: tx.to.toLowerCase(), bridgeAddr: this.config.bridgeAddress.toLowerCase() },
-          'tx.to doesnt match with bridgeAddr, skip ...'
-        );
-        continue;
-      }
-      const decoded = this.decodeDeposit(tx.data);
+      const decoded = decodeCalldata(d.args.data);
       if (!decoded) {
         continue;
       }
       this.logger.info(decoded, `Decoded Deposit info`);
 
-      const destConfig = getChainConfigByChainId(d.args?.destinationChainID);
+      const destConfig = getChainConfigByChainId(d.args.destinationDomainID);
 
       let dataHash = '0x';
       if (destConfig) {
-        const records = await this.bridge._depositRecords(d.args?.depositNonce, d.args?.destinationChainID);
+        const records = await this.bridge._depositRecords(d.args.depositNonce, d.args.destinationDomainID);
         dataHash = ethers.utils.solidityKeccak256(['address', 'bytes'], [destConfig.erc20HandlerAddress, records]);
       } else {
         this.logger.warn(
-          { destChainId: d.args?.destinationChainID, blockNum: d.blockNumber },
+          { destDomainId: d.args.destinationDomainID, blockNum: d.blockNumber },
           'No destination chain config found for deposit in block:'
         );
       }
@@ -340,16 +313,13 @@ export class SyncCMD extends CMD {
 
       const newDeposit = {
         network: this.config.network,
-        homeChainId: this.config.chainId,
-        destChainId: d.args?.destinationChainID,
-        depositNonce: new BigNumber(d.args?.depositNonce.toString()).toNumber(),
-        homeBridgeAddr: this.config.bridgeAddress.toLowerCase(),
+        key,
 
         resourceId: d.args?.resourceID,
         dataHash: dataHash,
 
         // address
-        fromAddr: tx.from.toLowerCase(),
+        fromAddr: d.args.user.toLowerCase(),
         toAddr: decoded.toAddr.toLowerCase(),
         amount: new BigNumber(decoded.amount.toString()),
 
@@ -357,19 +327,11 @@ export class SyncCMD extends CMD {
         txHash: d.transactionHash,
         blockNum: Number(d.blockNumber),
         blockTimestamp: Number(block.timestamp),
-      };
-      const exist = await this.depositRepo.exists(
-        newDeposit.homeChainId,
-        newDeposit.destChainId,
-        newDeposit.depositNonce,
-        newDeposit.homeBridgeAddr
-      );
-      if (!exist) {
-        await this.depositRepo.create(newDeposit);
-        this.logger.info(newDeposit, `Deposit saved.`);
-      } else {
-        this.logger.info(`Deposit exists`);
-      }
+      } as Deposit;
+
+      await this.depositRepo.create(newDeposit);
+      this.logger.info(newDeposit, `Deposit saved.`);
+
       await this.headRepo.upsert(this.depositKey, d.blockNumber);
     }
   }

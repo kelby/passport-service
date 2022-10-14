@@ -1,10 +1,4 @@
-import * as fs from 'fs';
-import * as path from 'path';
-
 import axios from 'axios';
-import BigNumber from 'bignumber.js';
-
-import { getSuffix, loadCSV } from '.';
 
 axios.defaults.timeout = 50000;
 export interface CurrPrices {
@@ -33,42 +27,5 @@ export const getCurrPrices = async () => {
   };
 };
 
-export const getBest = (url) => {
-  return axios.get(`${url}/blocks/best`);
-};
 
-export const getCurrentDebts = () => {
-  const debtsDir = path.join(__dirname, '..', '..', 'csv', 'debts');
-  const totalPath = path.join(debtsDir, 'total.csv');
-  const files = fs.readdirSync(debtsDir);
-  let repaied = {};
-  const totals = loadCSV(totalPath);
 
-  // read total debts
-  for (const t of totals) {
-    const addr = t['address'].toLowerCase();
-    const amount = t['amount'];
-    if (!(addr in repaied)) {
-      repaied[addr] = new BigNumber(0);
-    }
-    repaied[addr] = repaied[addr].plus(amount);
-  }
-
-  // minus repaied amount
-  for (const f of files) {
-    const date = new Date();
-    const suffix = getSuffix(date);
-    if (f.startsWith('repays-') && f.endsWith('.csv') && !f.startsWith(`repays-${suffix}`)) {
-      const repays = loadCSV(path.join(debtsDir, f));
-      for (const r of repays) {
-        const addr = r['address'];
-        const amount = r['amount'];
-        if (addr in repaied) {
-          repaied[addr] = repaied[addr].minus(amount);
-        }
-      }
-    }
-  }
-
-  return repaied;
-};

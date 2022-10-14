@@ -1,20 +1,23 @@
 import { Network } from '../const';
-import { Deposit } from '../model/deposit.interface';
-import depositModel from '../model/deposit.model';
+import { Deposit, DepositModel, Key } from '../model';
 
 export class DepositRepo {
-  private model = depositModel;
+  private model = DepositModel;
 
   public async findAll() {
     return this.model.find();
   }
 
-  public async exists(homeChainId: number, destChainId: number, depositNonce: number, homeBridgeAddr: string) {
-    return this.model.exists({ homeChainId, destChainId, depositNonce, homeBridgeAddr: homeBridgeAddr.toLowerCase() });
+  public async exists(key: Key) {
+    return this.model.exists({ key });
   }
 
-  public async findByID(homeChainId: number, destChainId: number, depositNonce: number, homeBridgeAddr: string) {
-    return this.model.findOne({ homeChainId, destChainId, depositNonce, homeBridgeAddr: homeBridgeAddr.toLowerCase() });
+  public async findByID(key: Key) {
+    return this.model.findOne({ key });
+  }
+
+  public async existsTx(txHash: string) {
+    return this.model.exists({ txHash });
   }
 
   public async findByTx(txHash: string) {

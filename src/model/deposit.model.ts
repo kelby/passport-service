@@ -4,6 +4,7 @@ import * as mongoose from 'mongoose';
 import { enumKeys } from '../const';
 import { Network } from '../const';
 import { Deposit } from './deposit.interface';
+import { keySchema } from './key.model';
 
 const depositSchema = new mongoose.Schema<Deposit>({
   network: {
@@ -15,10 +16,7 @@ const depositSchema = new mongoose.Schema<Deposit>({
     index: true,
   },
 
-  homeChainId: { type: Number, required: true, index: true },
-  destChainId: { type: Number, required: true, index: true },
-  depositNonce: { type: Number, required: true, index: true },
-  homeBridgeAddr: { type: String, required: true, index: true },
+  key: { type: keySchema, required: true, unique: true },
 
   resourceId: { type: String, required: true, index: true },
   dataHash: { type: String, required: true, index: true },
@@ -37,7 +35,7 @@ const depositSchema = new mongoose.Schema<Deposit>({
   blockTimestamp: { type: Number, required: true, index: true },
 });
 
-depositSchema.index({ homeChainId: 1, destChainId: 1, depositNonce: 1, homeBridgeAddr: 1 }, { unique: true });
+depositSchema.index({ homeDomainId: 1, destDomainId: 1, depositNonce: 1, homeBridgeAddr: 1 }, { unique: true });
 
 depositSchema.set('toJSON', {
   transform: (doc, ret, options) => {
@@ -46,19 +44,6 @@ depositSchema.set('toJSON', {
     return ret;
   },
 });
-
-depositSchema.methods.toSummary = function () {
-  return {
-    network: this.network,
-    direction: `${this.homeChainId} -> ${this.destChainId}`,
-    depositNonce: this.depositNonce.toFixed(0),
-    resourceID: this.resourceId,
-    txHash: this.txHash,
-    blockNum: this.blockNum,
-    toAddr: this.toAddr,
-    amount: this.amount.toFixed(0),
-  };
-};
 
 const model = mongoose.model<Deposit & mongoose.Document>('Deposit', depositSchema);
 

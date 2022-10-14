@@ -1,15 +1,13 @@
 import BigNumber from 'bignumber.js';
 
 import { Network, ProposalStatus } from '../const';
+import { Key } from './key.interface';
 
 export interface Proposal {
   network: Network;
 
   // id
-  homeChainId: number;
-  destChainId: number;
-  depositNonce: number;
-  destBridgeAddr: string;
+  key: Key;
 
   // deposit data
   resourceId: string;
@@ -18,11 +16,11 @@ export interface Proposal {
   // status
   status: ProposalStatus;
 
+  toAddr: string;
+  amount: BigNumber;
+
   // tx details
   txHash: string;
   blockNum: number;
   blockTimestamp: number;
-
-  toAddr: string;
-  amount: BigNumber;
 }

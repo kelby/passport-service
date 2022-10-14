@@ -1,15 +1,13 @@
 import BigNumber from 'bignumber.js';
 
 import { Network } from '../const';
+import { Key } from './key.interface';
 
 export interface Deposit {
   network: Network;
 
   // id
-  homeChainId: number;
-  destChainId: number;
-  depositNonce: number;
-  homeBridgeAddr: string;
+  key: Key;
 
   // deposit data
   resourceId: string;

@@ -3,6 +3,7 @@ import * as mongoose from 'mongoose';
 
 import { ProposalStatus, enumKeys } from '../const';
 import { Network } from '../const';
+import { keySchema } from './key.model';
 import { Proposal } from './proposal.interface';
 
 const proposalSchema = new mongoose.Schema<Proposal>({
@@ -15,10 +16,7 @@ const proposalSchema = new mongoose.Schema<Proposal>({
     index: true,
   },
 
-  homeChainId: { type: Number, required: true, index: true },
-  destChainId: { type: Number, required: true, index: true },
-  depositNonce: { type: Number, required: true, index: true },
-  destBridgeAddr: { type: String, required: true, index: true },
+  key: { type: keySchema, required: true, unique: true },
 
   resourceId: { type: String, required: true, index: true },
   dataHash: { type: String, required: true, index: true },
@@ -45,7 +43,7 @@ const proposalSchema = new mongoose.Schema<Proposal>({
   },
 });
 
-proposalSchema.index({ homeChainId: 1, destChainId: 1, depositNonce: 1, destBridgeAddr: 1 }, { unique: true });
+proposalSchema.index({ homeDomainId: 1, destDomainId: 1, depositNonce: 1, destBridgeAddr: 1 }, { unique: true });
 
 proposalSchema.set('toJSON', {
   transform: (doc, ret, options) => {
@@ -54,19 +52,6 @@ proposalSchema.set('toJSON', {
     return ret;
   },
 });
-
-proposalSchema.methods.toSummary = function () {
-  return {
-    network: this.network,
-    direction: `${this.homeChainId} -> ${this.destChainId}`,
-    depositNonce: this.depositNonce.toFixed(0),
-    resourceID: this.resourceId,
-    txHash: this.txHash,
-    blockNum: this.blockNum,
-    toAddr: this.toAddr,
-    amount: this.amount.toFixed(0),
-  };
-};
 
 const model = mongoose.model<Proposal & mongoose.Document>('Proposal', proposalSchema);
 

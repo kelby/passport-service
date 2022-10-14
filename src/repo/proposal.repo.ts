@@ -1,11 +1,11 @@
-import { Proposal } from '../model/proposal.interface';
-import proposalModel from '../model/proposal.model';
+import { ProposalStatus } from '../const';
+import { Key, Proposal, ProposalModel } from '../model';
 
 export class ProposalRepo {
-  private model = proposalModel;
+  private model = ProposalModel;
 
-  public async exists(homeChainId: number, destChainId: number, depositNonce: number, destBridgeAddr: string) {
-    return this.model.exists({ homeChainId, destChainId, depositNonce, destBridgeAddr: destBridgeAddr.toLowerCase() });
+  public async exists(key: Key) {
+    return this.model.exists({ key });
   }
 
   public async findAll() {
@@ -16,12 +16,20 @@ export class ProposalRepo {
     return this.model.findOne({ txHash });
   }
 
-  public async findByID(homeChainId: number, destChainId: number, depositNonce: number, destBridgeAddr: string) {
-    return this.model.findOne({ homeChainId, destChainId, depositNonce, destBridgeAddr: destBridgeAddr.toLowerCase() });
+  public async findByKey(key: Key) {
+    return this.model.findOne({ key });
   }
 
   public async create(doc: Proposal) {
     await this.model.create(doc);
+  }
+
+  public async existsTx(txHash: string) {
+    return this.model.exists({ txHash });
+  }
+
+  public async updateStatus(key: Key, status: ProposalStatus) {
+    await this.model.updateOne({ key }, { $set: { status } });
   }
 }
 
