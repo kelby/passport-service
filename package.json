@@ -1,5 +1,5 @@
 {
-  "name": "@meterio/chainbridge-service",
+  "name": "@meterio/passport-service",
   "version": "0.0.1",
   "description": "Sync meter passport deposit/proposal info into mongo",
   "license": "MIT",
@@ -10,10 +10,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/meterio/chainbridge-service.git"
+    "url": "https://github.com/meterio/passport-service.git"
   },
   "bugs": {
-    "url": "https://github.com/meterio/chainbridge-service/issues"
+    "url": "https://github.com/meterio/passport-service/issues"
   },
   "tags": [
     "typescript",
