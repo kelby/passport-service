@@ -4,7 +4,7 @@ require('./utils/validateEnv');
 import { disconnect } from 'mongoose';
 import { Option } from 'commander';
 import { serveAPI } from './api/server';
-import { SyncCMD } from './cmd';
+import { SyncCMD, RelayCMD } from './cmd';
 import { Network } from './const';
 import { connectDB } from './utils/db';
 
@@ -24,6 +24,19 @@ const runSync = async (options) => {
   await disconnect();
 };
 
+const runRelay = async (options) => {
+  if (!options.network) {
+    throw new Error('please configure network');
+  }
+  console.log(`start to relay on network ${network}`);
+  var network: Network;
+  network = Network[options.network.toLowerCase()];
+  const cmd = new RelayCMD(network);
+  await connectDB();
+  await cmd.start();
+  await disconnect();
+};
+
 const runAPI = async (options) => {
   console.log(`start query api`);
   await serveAPI(options.port);
@@ -32,7 +45,7 @@ const runAPI = async (options) => {
 
 const parseNetwork = (value) => {
   try{
-  const network = Network[value.toLowerCase()]; 
+  const network = Network[value.toLowerCase()];
   return network
   }catch(e){
       throw new commander.InvalidArgumentError('Not a valid network');
@@ -56,6 +69,14 @@ program.command('sync').addOption(
     .argParser(parseNetwork)
     .makeOptionMandatory(true)
 ).action(runSync);
+
+program.command('relay').addOption(
+  new Option('-n, --network <network>', 'Network to use')
+    .env('API_NETWORK')
+    .argParser(parseNetwork)
+    .makeOptionMandatory(true)
+).action(runRelay);
+
 program.command('api').addOption(
   new Option('-p, --port <port>', 'Port to listen').env('API_PORT').argParser(parsePort).makeOptionMandatory(true)
 ).action(runAPI);

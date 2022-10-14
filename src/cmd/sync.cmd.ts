@@ -202,7 +202,7 @@ export class SyncCMD extends CMD {
         dest: this.config.chainId,
         nonce: new BigNumber(p.args.depositNonce.toString()).toNumber(),
       };
-      const existTx = await this.depositRepo.findByTx(p.transactionHash);
+      const existTx = await this.proposalRepo.findByTx(p.transactionHash);
       if (existTx) {
         console.log(`skip current ProposalEvent, existed tx # ${i + 1}/${proposals.length}`);
         continue;

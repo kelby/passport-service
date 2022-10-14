@@ -4,11 +4,15 @@ import * as Logger from 'bunyan';
 import { ethers, utils } from 'ethers';
 import { _toEscapedUtf8String } from 'ethers/lib/utils';
 
-import { Network, RelayConfig, getChainConfig, relayConfig } from '../const';
+import { Network, RelayConfig, getChainConfig, relayConfig, ProposalStatus } from '../const';
 import { HeadRepo } from '../repo';
-import { Signatures, Signatures__factory } from '../typechain';
-import { InterruptedError, sleep } from '../utils';
+import { Bridge__factory, Signatures, Signatures__factory } from '../typechain';
+import { decodeCalldata, InterruptedError, sleep } from '../utils';
 import { CMD } from './cmd';
+import { BigNumber } from 'bignumber.js';
+import SubmitSignatureRepo from '../repo/submitSignature.repo';
+import { SignaturePass, SubmitSignature } from '../model';
+import SignaturePassRepo from '../repo/signaturePass.repo';
 
 const MIN_SYNC_WINDOW_SIZE = 5;
 const FAST_INTERVAL = 3000;
@@ -22,13 +26,20 @@ export class RelayCMD extends CMD {
   private config: RelayConfig;
   private provider: ethers.providers.JsonRpcProvider;
   private sig: Signatures;
+  private signaturePassKey = '';
+  private submitSignatureKey = '';
   private relayKey = 'relay';
   private rpcTimestamps = [];
+
   private headRepo = new HeadRepo();
+  private submitSignatureRepo = new SubmitSignatureRepo();
+  private signaturePassRepo = new SignaturePassRepo();
 
   constructor(network: Network) {
     super();
     this.network = network;
+    this.signaturePassKey = `${this.network}_signature_pass`.toLowerCase();
+    this.submitSignatureKey = `${this.network}_submit_signature`.toLowerCase();
     delete this.logger.fields.hostname;
     delete this.logger.fields.pid;
   }
@@ -39,6 +50,7 @@ export class RelayCMD extends CMD {
     this.provider = new ethers.providers.JsonRpcProvider(this.config.rpcUrl);
     // FIXME: change address to relay chain contract
     this.sig = Signatures__factory.connect(this.config.sigAddress, this.provider);
+    // this.bridge = Bridge__factory.connect(this.config.bridgeAddress, this.provider);
 
     await this.init();
     await this.loop();
@@ -119,10 +131,132 @@ export class RelayCMD extends CMD {
   }
 
   public async fetchSubmitSignature(startNum: string | number, endNum: string | number) {
-    // FIXME:
+    const event = this.sig.filters.SubmitSignature(null, null, null, null, null, null)
+    const records = await this.sig.queryFilter(event, startNum, endNum);
+    if (records.length > 0) {
+      this.logger.info(`Found ${records.length} SubmitSignature`);
+    }
+
+    for (const [i, p] of records.entries()) {
+      if (this.shutdown) {
+        break;
+      }
+      if (!p.args) {
+        this.logger.error(p, 'Error parsing proposal event');
+        continue;
+      }
+
+      const key = {
+        home: p.args.originDomainID,
+        dest: p.args.destinationDomainID,
+        nonce: new BigNumber(p.args.depositNonce.toString()).toNumber(),
+      };
+
+      const existTx = await this.submitSignatureRepo.findByTx(p.transactionHash);
+      if (existTx) {
+        console.log(`skip current SubmitSignature, existed tx # ${i + 1}/${records.length}`);
+        continue;
+      }
+
+      const exist = await this.submitSignatureRepo.exists(key);
+      if (exist) {
+        console.log(`skip current SubmitSignature, existed # ${i + 1}/${records.length}`);
+        continue;
+      }
+
+      const decoded = decodeCalldata(p.args.data);
+      if (!decoded) {
+        continue;
+      }
+
+      const block = await p.getBlock();
+
+      const newSubmitSignature = {
+        network: this.config.network,
+        key,
+
+        resourceId: p.args.resourceID,
+        data: p.args.data,
+        // status: p.args.status as ProposalStatus,
+        signature: p.args.signature,
+
+        txHash: p.transactionHash,
+        blockNum: p.blockNumber,
+        blockTimestamp: block.timestamp,
+
+        toAddr: decoded.toAddr,
+        amount: decoded.amount,
+      } as SubmitSignature;
+
+      await this.submitSignatureRepo.create(newSubmitSignature);
+      this.logger.info(newSubmitSignature, `SubmitSignature saved.`);
+      await this.headRepo.upsert(this.submitSignatureKey, p.blockNumber);
+      //  ...
+    }
   }
 
   public async fetchSignaturePass(startNum: string | number, endNum: string | number) {
-    // FIXME:
+    const event = this.sig.filters.SignaturePass(null, null, null, null, null, null)
+    const records = await this.sig.queryFilter(event, startNum, endNum);
+    if (records.length > 0) {
+      this.logger.info(`Found ${records.length} SignaturePass`);
+    }
+
+    for (const [i, p] of records.entries()) {
+      if (this.shutdown) {
+        break;
+      }
+      if (!p.args) {
+        this.logger.error(p, 'Error parsing proposal event');
+        continue;
+      }
+
+      const key = {
+        home: p.args.originDomainId,
+        dest: p.args.destinationDomainID,
+        nonce: new BigNumber(p.args.depositNonce.toString()).toNumber(),
+      };
+
+      const existTx = await this.signaturePassRepo.findByTx(p.transactionHash);
+      if (existTx) {
+        console.log(`skip current SignaturePass, existed tx # ${i + 1}/${records.length}`);
+        continue;
+      }
+
+      const exist = await this.signaturePassRepo.exists(key);
+      if (exist) {
+        console.log(`skip current SignaturePass, existed # ${i + 1}/${records.length}`);
+        continue;
+      }
+
+      const decoded = decodeCalldata(p.args.data);
+      if (!decoded) {
+        continue;
+      }
+
+      const block = await p.getBlock();
+
+      const newSignaturePass = {
+        network: this.config.network,
+        key,
+
+        resourceId: p.args.resourceID,
+        data: p.args.data,
+        // status: p.args.status as ProposalStatus,
+        signature: p.args.signature,
+
+        txHash: p.transactionHash,
+        blockNum: p.blockNumber,
+        blockTimestamp: block.timestamp,
+
+        toAddr: decoded.toAddr,
+        amount: decoded.amount,
+      } as SignaturePass;
+
+      await this.signaturePassRepo.create(newSignaturePass);
+      this.logger.info(newSignaturePass, `SignaturePass saved.`);
+      await this.headRepo.upsert(this.signaturePassKey, p.blockNumber);
+      //  ...
+    }
   }
 }

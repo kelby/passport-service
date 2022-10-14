@@ -1,5 +1,6 @@
 import { Network } from '../const';
 import { Key } from './key.interface';
+import BigNumber from 'bignumber.js';
 
 /*
   event SignaturePass(
@@ -21,6 +22,10 @@ export interface SignaturePass {
   resourceId: string;
   data: string;
   signature: string;
+
+  // decode data field
+  toAddr: string;
+  amount: BigNumber;
 
   // tx detail
   txHash: string;

@@ -1,5 +1,5 @@
 export interface Key {
-  home: number;
-  dest: number;
-  nonce: number;
+  home: number; // originDomainID
+  dest: number; // destinationDomainID
+  nonce: number; // depositNonce
 }
