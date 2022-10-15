@@ -1,25 +1,27 @@
 import { Request, Response, Router } from 'express';
+import { try$ } from 'express-toolbox';
+import { Logger } from 'pino';
 
 import * as pkg from '../../../package.json';
-import Controller from '../interfaces/controller.interface';
+import { HeadRepo } from '../../repo';
+import { BaseController } from './base.controller';
 
-class HomeController implements Controller {
-  public path = '';
-  public router = Router();
-
-  constructor() {
-    this.initializeRoutes();
+export class HomeController extends BaseController {
+  constructor(rootLogger: Logger) {
+    super(rootLogger, 'home', '/');
   }
 
-  private initializeRoutes() {
-    this.router.get(`${this.path}`, this.getHome);
+  protected initializeRoutes() {
+    this.router.get(`${this.path}`, try$(this.getHome));
   }
 
-  private getHome = async (req: Request, res: Response) => {
-    throw new Error("could not process")
-    return res.json({ name: 'bridge-api', version: pkg.version, });
-  };
-
+  private async getHome(req: Request, res: Response) {
+    const headRepo = new HeadRepo();
+    const headAll = await headRepo.findAll();
+    let heads = {};
+    for (const h of headAll) {
+      heads[h.key] = h.num;
+    }
+    return res.json({ service: 'passport-api', version: pkg.version, heads });
+  }
 }
-
-export default HomeController;

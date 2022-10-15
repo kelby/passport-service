@@ -4,16 +4,14 @@ import { Network } from '../const';
 import { Key } from './key.interface';
 
 export interface Deposit {
-  network: Network;
-
   // id
   key: Key;
 
-  // deposit data
+  // event data
   resourceId: string;
-  dataHash: string;
+  data: string;
 
-  // address
+  // decoded
   fromAddr: string;
   toAddr: string;
   amount: BigNumber;
@@ -21,5 +19,4 @@ export interface Deposit {
   // tx detail
   txHash: string;
   blockNum: number;
-  blockTimestamp: number;
 }

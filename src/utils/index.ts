@@ -40,3 +40,11 @@ export const fromSuffix = (suffix: string): Date => {
   date.setHours(0, 1, 0);
   return date;
 };
+
+export const calcEnd = (start, end, step: number) => {
+  if (start > end) {
+    return start;
+  }
+  const actualEnd = end > start + step ? start + step - 1 : end;
+  return actualEnd;
+};

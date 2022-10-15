@@ -1,6 +1,7 @@
+import BigNumber from 'bignumber.js';
+
 import { Network } from '../const';
 import { Key } from './key.interface';
-import BigNumber from 'bignumber.js';
 
 /*
   event SignaturePass(
@@ -13,22 +14,14 @@ import BigNumber from 'bignumber.js';
   );
 */
 export interface SignaturePass {
-  network: Network;
-
-  // id
-  key: Key;
-
   // event data
+  key: Key;
   resourceId: string;
   data: string;
   signature: string;
 
-  // decode data field
-  toAddr: string;
-  amount: BigNumber;
-
   // tx detail
+  relayerAddr: string;
   txHash: string;
   blockNum: number;
-  blockTimestamp: number;
 }

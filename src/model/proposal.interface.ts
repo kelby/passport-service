@@ -4,23 +4,16 @@ import { Network, ProposalStatus } from '../const';
 import { Key } from './key.interface';
 
 export interface Proposal {
-  network: Network;
-
   // id
   key: Key;
 
-  // deposit data
+  // event data
   resourceId: string;
   dataHash: string;
-
-  // status
   status: ProposalStatus;
 
-  toAddr: string;
-  amount: BigNumber;
-
   // tx details
-  txHash: string;
-  blockNum: number;
-  blockTimestamp: number;
+  txHashs: string[];
+  createBlockNum: number;
+  lastUpdateBlockNum: number;
 }

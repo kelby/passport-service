@@ -1,30 +1,22 @@
 import * as mongoose from 'mongoose';
 
-import { enumKeys } from '../const';
-import { Network } from '../const';
 import { keySchema } from './key.model';
 import { SubmitSignature } from './submitSignature.interface';
 
 const schema = new mongoose.Schema<SubmitSignature>({
-  network: {
-    type: String,
-    enum: enumKeys(Network),
-    get: (enumValue: string) => Network[enumValue as keyof typeof Network],
-    set: (enumValue: Network) => Network[enumValue],
-    required: true,
-    index: true,
-  },
-
-  key: { type: keySchema, required: true, unique: true },
-
+  key: { type: keySchema, required: true, index: true },
   resourceId: { type: String, required: true, index: true },
   data: { type: String, required: true, index: true },
   signature: { type: String, required: true, index: true },
 
-  txHash: { type: String, required: true, unique: true },
+  relayerAddr: { type: String, required: true, index: true },
+  txHash: { type: String, required: true, index: true },
   blockNum: { type: Number, required: true, index: true },
-  blockTimestamp: { type: Number, required: true, index: true },
 });
+
+schema.index({ key: 1, txHash: 1 }, { unique: true });
+schema.index({ key: 1, resourceId: 1 });
+schema.index({ key: 1, resourceId: 1, data: 1 });
 
 schema.set('toJSON', {
   transform: (doc, ret, options) => {

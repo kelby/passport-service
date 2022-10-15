@@ -37,6 +37,6 @@ export const connectDB = async () => {
     queries.push(`${key}=${query[key]}`);
   }
   let queryStr = queries.join('&');
-  // mongoose.set("debug", true);
+  mongoose.set('debug', true);
   await mongoose.connect(queryStr ? url + '?' + queryStr : url, options);
 };

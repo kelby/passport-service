@@ -7,6 +7,10 @@ export class HeadRepo {
     return this.model.findOne({ key });
   }
 
+  public async findAll() {
+    return this.model.find();
+  }
+
   public async create(key: string, num: number) {
     return this.model.create({ key, num });
   }

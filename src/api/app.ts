@@ -1,19 +1,14 @@
 import * as path from 'path';
 
-
+import { connectDB } from '../utils';
 import Controller from './interfaces/controller.interface';
 import errorMiddleware from './middleware/error.middleware';
 
 import express = require('express');
 import cors = require('cors');
 import cookieParser = require('cookie-parser');
-import {connectDB} from '../utils'
 
-function loggerMiddleware(
-  request: express.Request,
-  response: express.Response,
-  next: express.NextFunction
-) {
+function loggerMiddleware(request: express.Request, response: express.Response, next: express.NextFunction) {
   console.log(`${request.method} ${request.path}`);
   next();
 }
@@ -29,9 +24,9 @@ class App {
     this.initializeErrorHandling();
   }
 
-  public async listen(port:number) {
+  public async listen(port: number) {
     const res = await this.connectToTheDatabase();
-    // console.log(res);
+    console.log(res);
     this.app.listen(port, () => {
       console.log(`App listening on the port ${port}`);
     });

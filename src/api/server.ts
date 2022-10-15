@@ -1,12 +1,11 @@
 require('../utils/validateEnv');
 
+import { Logger } from 'pino';
+
 import App from './app';
-import HomeController from './controllers/home.controller';
+import { HomeController } from './controllers/home.controller';
 
-const app = new App([
-  new HomeController(),
-]);
-
-export const serveAPI = async (port)=>{
+export const serveAPI = async (port: number, rootLogger: Logger) => {
+  const app = new App([new HomeController(rootLogger)]);
   await app.listen(port);
-}
+};
