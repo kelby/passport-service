@@ -4,7 +4,7 @@ const { MONGO_USER, MONGO_PWD, MONGO_PATH, MONGO_SSL_CA } = process.env;
 
 export const connectDB = async () => {
   // console.log(`connect to DB path: ${MONGO_PATH}`);
-  let dbName = 'bridgedbv2';
+  let dbName = 'bridgev2db';
   let url = `mongodb://${MONGO_USER}:${MONGO_PWD}@${MONGO_PATH}/${dbName}`;
   let options: mongoose.ConnectionOptions = {
     useNewUrlParser: true,
