@@ -1,10 +1,18 @@
-import { Router } from 'express';
+import { RequestHandler, Router } from 'express';
 import { Logger } from 'pino';
 
-interface Controller {
+export interface Controller {
   path: string;
   router: Router;
   log: Logger;
 }
 
-export default Controller;
+export function try$(handler: RequestHandler): RequestHandler {
+  return async (req, res, next) => {
+    try {
+      await handler(req, res, next);
+    } catch (e) {
+      next(e);
+    }
+  };
+}

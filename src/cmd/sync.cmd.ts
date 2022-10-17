@@ -114,14 +114,30 @@ export class SyncCMD extends CMD {
 
         if (dhead < targetNum) {
           const dtail = this.calcEnd(dhead, targetNum, this.config.windowSize);
-          await this.fetchDeposits(dhead, dtail);
-          await this.headRepo.upsert(this.depositKey, dtail);
+          try {
+            await this.fetchDeposits(dhead, dtail);
+            await this.headRepo.upsert(this.depositKey, dtail);
+          } catch (e) {
+            if (e instanceof InterruptedError) {
+              throw e;
+            } else {
+              this.log.error('deposit scan error:', e);
+            }
+          }
         }
 
         if (phead < targetNum) {
           const ptail = this.calcEnd(phead, targetNum, this.config.windowSize);
-          await this.fetchProposals(phead, ptail);
-          await this.headRepo.upsert(this.proposalKey, ptail);
+          try {
+            await this.fetchProposals(phead, ptail);
+            await this.headRepo.upsert(this.proposalKey, ptail);
+          } catch (e) {
+            if (e instanceof InterruptedError) {
+              throw e;
+            } else {
+              this.log.error('proposal scan error:', e);
+            }
+          }
         } else {
         }
 
@@ -131,12 +147,12 @@ export class SyncCMD extends CMD {
           await sleep(Number(FAST_SYNC_INTERVAL));
         }
       } catch (e) {
-        if (!(e instanceof InterruptedError)) {
-          this.log.error(e, this.name + 'loop: ' + (e as Error).stack);
-        } else {
+        if (e instanceof InterruptedError) {
           if (this.shutdown) {
             break;
           }
+        } else {
+          this.log.error(e, this.name + 'loop: ' + (e as Error).stack);
         }
       }
     }

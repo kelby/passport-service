@@ -1,7 +1,7 @@
 import * as path from 'path';
 
 import { connectDB } from '../utils';
-import Controller from './interfaces/controller.interface';
+import { Controller } from './interfaces/controller.interface';
 import errorMiddleware from './middleware/error.middleware';
 
 import express = require('express');

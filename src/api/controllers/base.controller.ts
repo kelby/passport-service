@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { Logger } from 'pino';
 
 import { DepositRepo, HeadRepo, ProposalRepo, SignaturePassRepo, SubmitSignatureRepo } from '../../repo';
-import Controller from '../interfaces/controller.interface';
+import { Controller, try$ } from '../interfaces/controller.interface';
 
 export abstract class BaseController implements Controller {
   public path = '';
