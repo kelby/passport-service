@@ -1,9 +1,9 @@
 {
   "apps": [
     {
-      "name": "bridge-sync",
+      "name": "passport-api",
       "instances": "1",
-      "script": "./src/main.ts",
+      "script": "./src/pm2-main.ts",
       "interpreter": "ts-node",
       "env": {
         "NODE_ENV": "production"

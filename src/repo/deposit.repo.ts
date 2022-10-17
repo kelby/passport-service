@@ -15,6 +15,10 @@ export class DepositRepo {
     return this.model.findOne({ key });
   }
 
+  public async countByHomeAndDest(home, dest: number) {
+    return this.model.count({ 'key.home': home, 'key.dest': dest });
+  }
+
   public async create(doc: Deposit) {
     this.model.create(doc);
   }

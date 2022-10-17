@@ -16,8 +16,7 @@ export class HomeController extends BaseController {
   }
 
   private async getHome(req: Request, res: Response) {
-    const headRepo = new HeadRepo();
-    const headAll = await headRepo.findAll();
+    const headAll = await this.headRepo.findAll();
     let heads = {};
     for (const h of headAll) {
       heads[h.key] = h.num;

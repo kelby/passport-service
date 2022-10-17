@@ -31,6 +31,8 @@ depositSchema.set('toJSON', {
   },
 });
 
+depositSchema.index({ 'key.home': 1, 'key.dest': 1 });
+
 const model = mongoose.model<Deposit & mongoose.Document>('Deposit', depositSchema, 'deposit');
 
 export default model;

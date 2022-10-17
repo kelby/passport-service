@@ -24,6 +24,8 @@ const proposalSchema = new mongoose.Schema<Proposal>({
   lastUpdateBlockNum: { type: Number, required: true, index: true },
 });
 
+proposalSchema.index({ 'key.home': 1, 'key.dest': 1 });
+
 proposalSchema.set('toJSON', {
   transform: (doc, ret, options) => {
     delete ret.__v;

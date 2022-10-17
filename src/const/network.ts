@@ -47,7 +47,7 @@ export class RelayConfig {
   throttleInterval: number; // throttle count / interval
 }
 
-const chainConfigs: ChainConfig[] = [
+export const chainConfigs: ChainConfig[] = [
   {
     network: Network.ethereum,
     rpcUrl: 'https://mainnet.infura.io/v3/2ad4eeb4c6a14a88b7b16872a0404a9a',

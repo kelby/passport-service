@@ -14,6 +14,9 @@ export class SignaturePassRepo {
   public async findByID(key: Key, txHash: string) {
     return this.model.findOne({ key, txHash });
   }
+  public async findByKey(key: Key) {
+    return this.model.findOne({ key });
+  }
 }
 
 export default SignaturePassRepo;

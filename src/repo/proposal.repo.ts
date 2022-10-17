@@ -23,6 +23,10 @@ export class ProposalRepo {
   public async updateStatus(key: Key, status: ProposalStatus) {
     await this.model.updateOne({ key }, { $set: { status } });
   }
+
+  public async countByHomeAndDest(home, dest: number) {
+    return this.model.count({ 'key.home': home, 'key.dest': dest });
+  }
 }
 
 export default ProposalRepo;
