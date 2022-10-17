@@ -120,7 +120,7 @@ export class SyncCMD extends CMD {
             if (e instanceof InterruptedError) {
               throw e;
             } else {
-              this.log.error('deposit scan error:', e);
+              this.log.error(e);
             }
           }
         }
@@ -134,7 +134,7 @@ export class SyncCMD extends CMD {
             if (e instanceof InterruptedError) {
               throw e;
             } else {
-              this.log.error('proposal scan error:', e);
+              this.log.error(e);
             }
           }
         } else {
