@@ -32,6 +32,6 @@ proposalSchema.set('toJSON', {
   },
 });
 
-const model = mongoose.model<Proposal & mongoose.Document>('Proposal', proposalSchema);
+const model = mongoose.model<Proposal & mongoose.Document>('Proposal', proposalSchema, 'proposal');
 
 export default model;

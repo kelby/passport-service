@@ -26,6 +26,6 @@ schema.set('toJSON', {
   },
 });
 
-const model = mongoose.model<SubmitSignature & mongoose.Document>('SubmitSignature', schema);
+const model = mongoose.model<SubmitSignature & mongoose.Document>('SubmitSignature', schema, 'submit_sig');
 
 export default model;

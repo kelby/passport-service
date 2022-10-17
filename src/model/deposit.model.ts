@@ -31,6 +31,6 @@ depositSchema.set('toJSON', {
   },
 });
 
-const model = mongoose.model<Deposit & mongoose.Document>('Deposit', depositSchema);
+const model = mongoose.model<Deposit & mongoose.Document>('Deposit', depositSchema, 'deposit');
 
 export default model;

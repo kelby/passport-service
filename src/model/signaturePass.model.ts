@@ -26,6 +26,6 @@ schema.set('toJSON', {
   },
 });
 
-const model = mongoose.model<SignaturePass & mongoose.Document>('SignaturePass', schema);
+const model = mongoose.model<SignaturePass & mongoose.Document>('SignaturePass', schema, 'sig_pass');
 
 export default model;
