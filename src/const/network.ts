@@ -14,7 +14,7 @@ export enum Network {
 }
 export class ChainConfig {
   network: Network;
-  chainId: number;
+  domainId: number;
   networkId: number;
   rpcUrl: string;
   bridgeAddress: string;
@@ -32,7 +32,7 @@ export class ChainConfig {
 
 export class RelayConfig {
   network: Network;
-  chainId: number;
+  domainId: number;
   networkId: number;
   rpcUrl: string;
   sigAddress: string;
@@ -51,7 +51,7 @@ const chainConfigs: ChainConfig[] = [
   {
     network: Network.ethereum,
     rpcUrl: 'https://mainnet.infura.io/v3/2ad4eeb4c6a14a88b7b16872a0404a9a',
-    chainId: 1,
+    domainId: 1,
     networkId: 1,
     bridgeAddress: '0xa7E2cE557980618253D9dafdEDb27ecCe2F82167',
     erc20HandlerAddress: '0xEa31ca828F53A41bA2864FA194bb8A2d3f11C0C0',
@@ -66,7 +66,7 @@ const chainConfigs: ChainConfig[] = [
   {
     network: Network.avalanche,
     rpcUrl: 'https://api.avax.network/ext/bc/C/rpc',
-    chainId: 2,
+    domainId: 2,
     networkId: 43114,
     bridgeAddress: '0xB447acD21831F6615e208c9EEa7E6049dB3391Cd',
     erc20HandlerAddress: '0xeB06fa7e1d400caa3D369776Da45EbB5EbDF9b5B',
@@ -81,7 +81,7 @@ const chainConfigs: ChainConfig[] = [
   {
     network: Network.meter,
     rpcUrl: 'https://rpc.meter.io',
-    chainId: 3,
+    domainId: 3,
     networkId: 82,
     bridgeAddress: '0x23894d2937A2a4A479f0407909DA5B028049568E',
     erc20HandlerAddress: '0x139d9B458AcDA76457DD99DB3A6a36ca9Cb3bbf1',
@@ -96,7 +96,7 @@ const chainConfigs: ChainConfig[] = [
   {
     network: Network.bsc,
     rpcUrl: 'https://bsc-dataseed.binance.org/',
-    chainId: 4,
+    domainId: 4,
     networkId: 56,
     bridgeAddress: '0x8209815136b35F21B8C0f5AA2E2f915a73530dF9',
     erc20HandlerAddress: '0x83354D47379881e167F7160A80dAC8269Fe946Fa',
@@ -111,7 +111,7 @@ const chainConfigs: ChainConfig[] = [
   {
     network: Network.moonriver,
     rpcUrl: 'https://moonriver.api.onfinality.io/public',
-    chainId: 5,
+    domainId: 5,
     networkId: 1285,
     bridgeAddress: '0x44F0f7F2bA1C077d27D83b22147744E04874B3a7',
     erc20HandlerAddress: '0xB1eFA941D6081afdE172e29D870f1Bbb91BfABf7',
@@ -126,7 +126,7 @@ const chainConfigs: ChainConfig[] = [
   {
     network: Network.theta,
     rpcUrl: 'https://eth-rpc-api.thetatoken.org/rpc',
-    chainId: 6,
+    domainId: 6,
     networkId: 361,
     bridgeAddress: '0x1a073fDCc6D9b7eAEc218FE47566Faa85326967D',
     erc20HandlerAddress: '0xe1c892A6cE33cB31c100369aA6fC302d7B96254a',
@@ -141,7 +141,7 @@ const chainConfigs: ChainConfig[] = [
   {
     network: Network.polis,
     rpcUrl: 'https://rpc.polis.tech',
-    chainId: 7,
+    domainId: 7,
     networkId: 333999,
     bridgeAddress: '0xbCD1acAa67863E633241AB5Ca2670853C7f13B0b',
     erc20HandlerAddress: '0x4A0a64621f065C41AAB284F661F8547647f92B07',
@@ -156,7 +156,7 @@ const chainConfigs: ChainConfig[] = [
   // {
   //   network: Network.energyweb,
   //   rpcUrl: 'https://rpc.energyweb.org',
-  //   chainId: 8,
+  //   domainId: 8,
   //   networkId: 246,
   //   bridgeAddress: '0xC112f793113b2dA428A4f4eD5CC90f5CD6552400',
   //   erc20HandlerAddress: '0x48A6fd66512D45006FC0426576c264D03Dfda304',
@@ -171,7 +171,7 @@ const chainConfigs: ChainConfig[] = [
   {
     network: Network.moonbeam,
     rpcUrl: 'https://moonbeam.api.onfinality.io/public',
-    chainId: 9,
+    domainId: 9,
     networkId: 1284,
     bridgeAddress: '0xc9796B65555B18Fe06a071B9F1ff26b76A4823eC',
     erc20HandlerAddress: '0x766E33b910Cd6329a0cBD5F72e48Ec162E38A25D',
@@ -186,7 +186,7 @@ const chainConfigs: ChainConfig[] = [
   {
     network: Network.polygon,
     rpcUrl: 'https://polygon-rpc.com',
-    chainId: 10,
+    domainId: 10,
     networkId: 137,
     bridgeAddress: '0xB447acD21831F6615e208c9EEa7E6049dB3391Cd',
     erc20HandlerAddress: '0xeB06fa7e1d400caa3D369776Da45EbB5EbDF9b5B',
@@ -203,7 +203,7 @@ const chainConfigs: ChainConfig[] = [
 export const relayConfig: RelayConfig = {
   network: Network.meter,
   rpcUrl: 'https://rpc.meter.io',
-  chainId: 3,
+  domainId: 3,
   networkId: 82,
   sigAddress: '0x2C451afd332bd18bB6c8748089142B044523219F',
   startBlockNum: 28698831,
@@ -223,9 +223,9 @@ export const getChainConfig = (network: Network) => {
   }
 };
 
-export const getChainConfigByChainId = (chainId: number) => {
+export const getChainConfigBydomainId = (domainId: number) => {
   for (const cf of chainConfigs) {
-    if (cf.chainId === chainId) {
+    if (cf.domainId === domainId) {
       return cf;
     }
   }

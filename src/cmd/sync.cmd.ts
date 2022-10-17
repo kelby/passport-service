@@ -1,8 +1,7 @@
 import { BigNumber } from 'bignumber.js';
-import { ethers, utils } from 'ethers';
 import { Logger } from 'pino';
 
-import { ChainConfig, Network, ProposalStatus, getChainConfig, getChainConfigByChainId } from '../const';
+import { Network, ProposalStatus } from '../const';
 import { Deposit, Proposal } from '../model';
 import { Bridge, Bridge__factory } from '../typechain';
 import { InterruptedError, decodeCalldata, sleep } from '../utils';
@@ -179,7 +178,7 @@ export class SyncCMD extends CMD {
 
       const key = {
         home: p.args.originDomainId,
-        dest: this.config.chainId,
+        dest: this.config.domainId,
         nonce: new BigNumber(p.args.depositNonce.toString()).toNumber(),
       };
 
@@ -242,8 +241,8 @@ export class SyncCMD extends CMD {
         continue;
       }
       const key = {
-        home: this.config.chainId,
-        dest: d.args.destinationChainID,
+        home: this.config.domainId,
+        dest: d.args.destinationDomainID,
         nonce: new BigNumber(d.args.depositNonce.toString()).toNumber(),
       };
 
@@ -261,20 +260,6 @@ export class SyncCMD extends CMD {
         continue;
       }
       this.log.info(decoded, `Decoded Deposit info`);
-
-      // const destConfig = getChainConfigByChainId(d.args.destinationDomainID);
-
-      // let dataHash = '0x';
-      // if (destConfig) {
-      //   await this.throttle();
-      //   const records = await this.bridge._depositRecords(d.args.depositNonce, d.args.destinationDomainID);
-      //   dataHash = ethers.utils.solidityKeccak256(['address', 'bytes'], [destConfig.erc20HandlerAddress, records]);
-      // } else {
-      //   this.log.warn(
-      //     { destDomainId: d.args.destinationDomainID, blockNum: d.blockNumber },
-      //     'No destination chain config found for deposit in block:'
-      //   );
-      // }
 
       const newDeposit = {
         key,
