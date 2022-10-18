@@ -8,9 +8,6 @@ import { BaseController } from './base.controller';
 export class DepositController extends BaseController {
   constructor(rootLogger: Logger) {
     super(rootLogger, 'deposit', '/api/deposit');
-  }
-
-  protected initializeRoutes() {
     this.router.get(`${this.path}/:home/:dest/:nonce`, try$(this.getDepositByKey));
   }
 

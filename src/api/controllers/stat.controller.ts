@@ -8,13 +8,10 @@ import { BaseController } from './base.controller';
 export class StatController extends BaseController {
   constructor(rootLogger: Logger) {
     super(rootLogger, 'deposit', '/api/stat');
-  }
-
-  protected initializeRoutes() {
     this.router.get(`${this.path}/`, try$(this.getStat));
   }
 
-  private async getStat(req: Request, res: Response) {
+  private getStat = async (req: Request, res: Response) => {
     let result = [];
     for (const fromChain of chainConfigs) {
       const home = fromChain.domainId;
@@ -32,5 +29,5 @@ export class StatController extends BaseController {
       }
     }
     return res.json(result);
-  }
+  };
 }
