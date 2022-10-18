@@ -19,5 +19,3 @@ export class SubmitSignatureRepo {
     return this.model.find({ key });
   }
 }
-
-export default SubmitSignatureRepo;

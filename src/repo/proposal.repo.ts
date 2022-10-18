@@ -28,5 +28,3 @@ export class ProposalRepo {
     return this.model.count({ 'key.home': home, 'key.dest': dest });
   }
 }
-
-export default ProposalRepo;

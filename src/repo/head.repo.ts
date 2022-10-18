@@ -19,5 +19,3 @@ export class HeadRepo {
     return this.model.findOneAndUpdate({ key }, { key, num }, { new: true, upsert: true });
   }
 }
-
-export default HeadRepo;

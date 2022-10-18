@@ -18,5 +18,3 @@ export class SignaturePassRepo {
     return this.model.findOne({ key });
   }
 }
-
-export default SignaturePassRepo;

@@ -23,5 +23,3 @@ export class DepositRepo {
     this.model.create(doc);
   }
 }
-
-export default DepositRepo;

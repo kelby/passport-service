@@ -177,7 +177,7 @@ export class SyncCMD extends CMD {
       }
 
       const key = {
-        home: p.args.originDomainId,
+        home: p.args.originDomainID,
         dest: this.config.domainId,
         nonce: new BigNumber(p.args.depositNonce.toString()).toNumber(),
       };
