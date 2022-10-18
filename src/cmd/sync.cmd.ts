@@ -203,12 +203,27 @@ export class SyncCMD extends CMD {
         continue;
       }
 
+      this.throttle();
+      const tx = await p.getTransaction();
+      let resourceId = '';
+      if (tx.data.startsWith(this.bridge.interface.getSighash('voteProposals'))) {
+        const res = this.bridge.interface.decodeFunctionData('voteProposals', tx.data);
+        console.log(res);
+        resourceId = res.resourceID;
+      } else if (tx.data.startsWith(this.bridge.interface.getSighash('voteProposal'))) {
+        const res = this.bridge.interface.decodeFunctionData('voteProposal', tx.data);
+        console.log(res);
+        resourceId = res.resourceID;
+      } else {
+        this.log.warn({ key, txHash: tx.hash }, 'could not decode tx data');
+        continue;
+      }
       const newProposal = {
         key,
 
-        resourceId: p.args.resourceID,
         dataHash: p.args.dataHash,
         status: p.args.status as ProposalStatus,
+        resourceId,
 
         txHashs: [p.transactionHash],
         createBlockNum: p.blockNumber,
