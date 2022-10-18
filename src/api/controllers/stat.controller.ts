@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { Logger } from 'pino';
 
-import { ChainConfig, Network, ProposalStatus, chainConfigs } from '../../const';
+import { Network, chainConfigs } from '../../const';
 import { try$ } from '../interfaces/controller.interface';
 import { BaseController } from './base.controller';
 

@@ -7,6 +7,7 @@ import { try$ } from '../interfaces/controller.interface';
 import { BaseController } from './base.controller';
 
 export class HomeController extends BaseController {
+  public headRepo = new HeadRepo();
   constructor(rootLogger: Logger) {
     super(rootLogger, 'home', '/');
   }
@@ -15,7 +16,8 @@ export class HomeController extends BaseController {
     this.router.get(`${this.path}`, try$(this.getHome));
   }
 
-  private async getHome(req: Request, res: Response) {
+  protected async getHome(req: Request, res: Response) {
+    console.log(this.headRepo);
     const headAll = await this.headRepo.findAll();
     let heads = {};
     for (const h of headAll) {
