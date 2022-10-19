@@ -29,7 +29,7 @@ export abstract class CMD {
 
   constructor(rootLogger: Logger, name: string, network) {
     this.name = name;
-    this.log = rootLogger.child({ cmd: this.name });
+    this.log = rootLogger.child({});
     this.network = network;
     this.config = getChainConfig(network);
     this.provider = new ethers.providers.JsonRpcProvider(this.config.rpcUrl);

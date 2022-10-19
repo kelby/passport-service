@@ -266,7 +266,7 @@ export class SyncCMD extends CMD {
 
       const exist = await this.depositRepo.exists(key);
       if (exist) {
-        console.log(`skip current Deposit, existed # ${i + 1}/${deposits.length}`);
+        this.log.info(`skip current Deposit, existed # ${i + 1}/${deposits.length}`);
         continue;
       }
 
@@ -277,7 +277,7 @@ export class SyncCMD extends CMD {
       if (!decoded) {
         continue;
       }
-      this.log.info(decoded, `Decoded Deposit info`);
+      this.log.info(decoded, `decoded Deposit info`);
 
       const newDeposit = {
         key,
