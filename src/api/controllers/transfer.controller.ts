@@ -7,14 +7,14 @@ import { ProposalStatus } from '../../const';
 import { try$ } from '../interfaces/controller.interface';
 import { BaseController } from './base.controller';
 
-export class DepositController extends BaseController {
+export class TransferController extends BaseController {
   constructor(rootLogger: Logger) {
-    super(rootLogger, 'deposit', '/api/deposit');
-    this.router.get(`${this.path}/:home/:dest/:nonce`, try$(this.getDepositByKey));
-    this.router.get(`${this.path}/history/:address`, try$(this.getHistoryDeposits));
+    super(rootLogger, 'transfer', '/api/transfer');
+    this.router.get(`${this.path}/:home/:dest/:nonce`, try$(this.getTransferByKey));
+    this.router.get(`${this.path}/history/:address`, try$(this.getTransferHistory));
   }
 
-  getDepositByKey = async (req: Request, res: Response) => {
+  getTransferByKey = async (req: Request, res: Response) => {
     const { home, dest, nonce } = req.params;
     const key = { home: Number(home), dest: Number(dest), nonce: Number(nonce) };
     const deposit = await this.depositRepo.findByKey(key);
@@ -38,14 +38,14 @@ export class DepositController extends BaseController {
     return res.json({
       ...deposit.toJSON(),
       status,
-      votedRelayer: sigs.map((s) => s.relayerAddr),
-      voteTxs: sigs.map((s) => s.txHash),
+      votedTxs: sigs.map((s) => ({ by: s.relayerAddr, txHash: s.txHash })),
       sigPassTx: spass?.txHash,
       proposalTxs: proposal?.txHashs,
+      signature: spass?.signature,
     });
   };
 
-  getHistoryDeposits = async (req: Request, res: Response) => {
+  getTransferHistory = async (req: Request, res: Response) => {
     const { address } = req.params;
     const deposits = await this.depositRepo.findByAddress(address);
     if (!deposits || deposits.length < 0) {
