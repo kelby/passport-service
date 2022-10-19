@@ -65,7 +65,7 @@ export class DepositController extends BaseController {
       }
       const proposal = await this.proposalRepo.findByKey(deposit.key);
       if (proposal) {
-        status = ProposalStatus[proposal.status];
+        status = ProposalStatus[proposal.status].toLowerCase();
       }
       result.push({
         ...deposit.toJSON(),
