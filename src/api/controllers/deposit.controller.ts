@@ -11,7 +11,7 @@ export class DepositController extends BaseController {
     this.router.get(`${this.path}/:home/:dest/:nonce`, try$(this.getDepositByKey));
   }
 
-  private async getDepositByKey(req: Request, res: Response) {
+  getDepositByKey = async (req: Request, res: Response) => {
     const { home, dest, nonce } = req.params;
     const key = { home: Number(home), dest: Number(dest), nonce: Number(nonce) };
     const deposit = await this.depositRepo.findByKey(key);
@@ -40,5 +40,5 @@ export class DepositController extends BaseController {
       sigPassTx: spass?.txHash,
       proposalTxs: proposal?.txHashs,
     });
-  }
+  };
 }
