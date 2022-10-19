@@ -14,5 +14,6 @@ export const decodeCalldata = (data: string) => {
 
   const toAddr = utils.hexDataSlice(decodedData[2], 0, decodedData[1].toNumber());
   const amount = new BigNumber(decodedData[0].toString());
+
   return { toAddr, amount };
 };

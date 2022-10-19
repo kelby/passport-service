@@ -182,7 +182,10 @@ export class SyncCMD extends CMD {
         nonce: new BigNumber(p.args.depositNonce.toString()).toNumber(),
       };
 
-      this.log.info(key, `start to process ProposalEvent`);
+      this.log.info(
+        { ...key, txHash: p.transactionHash },
+        `start to process ProposalEvent, #${i + 1}/${proposals.length}`
+      );
 
       const proposal = await this.proposalRepo.findByKey(key);
 
@@ -267,7 +270,7 @@ export class SyncCMD extends CMD {
         continue;
       }
 
-      this.log.info(key, `start to process Deposit, # ${i + 1}/${deposits.length}`);
+      this.log.info({ ...key, txHash: d.transactionHash }, `start to process Deposit, #${i + 1}/${deposits.length}`);
 
       // FIXME: may have different format
       const decoded = decodeCalldata(d.args.data);

@@ -19,6 +19,10 @@ export class DepositRepo {
     return this.model.count({ 'key.home': home, 'key.dest': dest });
   }
 
+  public async findByAddress(from: string) {
+    return this.model.find({ from: from.toLowerCase() });
+  }
+
   public async create(doc: Deposit) {
     this.model.create(doc);
   }
