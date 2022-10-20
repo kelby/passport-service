@@ -65,6 +65,9 @@ export class SyncCMD extends CMD {
     if (!targetHead || targetHead.num <= 0) {
       this.log.info(`Set target head with current best num: ${bestNum}`);
       await this.headRepo.upsert(this.targetKey, bestNum);
+    } else if (targetHead.num < bestNum) {
+      this.log.info({ currentTarget: targetHead.num, bestNum }, `Set target head with current best num: ${bestNum}`);
+      await this.headRepo.upsert(this.targetKey, bestNum);
     }
   }
 

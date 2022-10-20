@@ -23,9 +23,9 @@ const runSync = async (options) => {
   if (!options.network) {
     throw new Error('please configure network');
   }
-  console.log(`start to sync on network ${network}`);
   var network: Network;
   network = Network[options.network.toLowerCase()];
+  console.log(`start to sync on network ${network}`);
   const cmd = new SyncCMD(network, rootLogger);
   await connectDB();
   await cmd.start();
