@@ -27,7 +27,7 @@ export class SyncCMD extends CMD {
 
   public async start() {
     this.log.info(`${this.name}: start`);
-    this.dormentInterval = this.config.avgBlockTime * this.config.windowSize * 1000;
+    this.dormentInterval = this.config.dormentInterval;
     this.bridge = Bridge__factory.connect(this.config.bridgeAddress, this.provider);
 
     await this.init();
@@ -211,11 +211,9 @@ export class SyncCMD extends CMD {
       let resourceId = '';
       if (tx.data.startsWith(this.bridge.interface.getSighash('voteProposals'))) {
         const res = this.bridge.interface.decodeFunctionData('voteProposals', tx.data);
-        console.log(res);
         resourceId = res.resourceID;
       } else if (tx.data.startsWith(this.bridge.interface.getSighash('voteProposal'))) {
         const res = this.bridge.interface.decodeFunctionData('voteProposal', tx.data);
-        console.log(res);
         resourceId = res.resourceID;
       } else {
         this.log.warn({ key, txHash: tx.hash }, 'could not decode tx data');

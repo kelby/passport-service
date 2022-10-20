@@ -24,11 +24,15 @@ export class ChainConfig {
   bridge?: ethers.Contract;
   avgBlockTime: number;
   windowSize: number;
+  dormentInterval: number;
   nativeTokenDecimals: number;
   nativeTokenSymbol?: string;
   throttleCount: number;
   throttleInterval: number; // throttle count / interval
 }
+
+const MIN_15_IN_MILLIS = 15 * 60 * 1000;
+const MIN_20_IN_MILLIS = 20 * 60 * 1000;
 
 export class RelayConfig {
   network: Network;
@@ -57,7 +61,8 @@ export const chainConfigs: ChainConfig[] = [
     erc20HandlerAddress: '0xEa31ca828F53A41bA2864FA194bb8A2d3f11C0C0',
     startBlockNum: 15648033,
     avgBlockTime: 12.06,
-    windowSize: 10000,
+    windowSize: 5000,
+    dormentInterval: 30 * 3600 * 1000, // 30min
     nativeTokenDecimals: 18,
     nativeTokenSymbol: 'ETH',
     throttleCount: 5,
@@ -73,6 +78,7 @@ export const chainConfigs: ChainConfig[] = [
     avgBlockTime: 2,
     startBlockNum: 20477952,
     windowSize: 2000,
+    dormentInterval: MIN_15_IN_MILLIS,
     nativeTokenDecimals: 18,
     nativeTokenSymbol: 'AVAX',
     throttleCount: 5,
@@ -88,6 +94,7 @@ export const chainConfigs: ChainConfig[] = [
     startBlockNum: 28698530,
     avgBlockTime: 2.33,
     windowSize: 10000,
+    dormentInterval: MIN_15_IN_MILLIS,
     nativeTokenDecimals: 18,
     nativeTokenSymbol: 'MTR',
     throttleCount: 5,
@@ -103,6 +110,7 @@ export const chainConfigs: ChainConfig[] = [
     startBlockNum: 21787431,
     avgBlockTime: 3,
     windowSize: 5000,
+    dormentInterval: MIN_15_IN_MILLIS,
     nativeTokenDecimals: 18,
     nativeTokenSymbol: 'BNB',
     throttleCount: 5,
@@ -118,6 +126,7 @@ export const chainConfigs: ChainConfig[] = [
     startBlockNum: 2676497,
     avgBlockTime: 13,
     windowSize: 5000,
+    dormentInterval: MIN_15_IN_MILLIS,
     nativeTokenDecimals: 18,
     nativeTokenSymbol: 'MOVR',
     throttleCount: 5,
@@ -133,6 +142,7 @@ export const chainConfigs: ChainConfig[] = [
     startBlockNum: 17311118,
     avgBlockTime: 6,
     windowSize: 5000,
+    dormentInterval: MIN_15_IN_MILLIS,
     nativeTokenSymbol: 'TFUEL',
     nativeTokenDecimals: 18,
     throttleCount: 5,
@@ -148,6 +158,7 @@ export const chainConfigs: ChainConfig[] = [
     startBlockNum: 6140552,
     avgBlockTime: 8.4,
     windowSize: 5000,
+    dormentInterval: MIN_15_IN_MILLIS,
     nativeTokenSymbol: 'POLIS',
     nativeTokenDecimals: 18,
     throttleCount: 5,
@@ -178,6 +189,7 @@ export const chainConfigs: ChainConfig[] = [
     startBlockNum: 1979809,
     avgBlockTime: 12.5,
     windowSize: 5000,
+    dormentInterval: MIN_15_IN_MILLIS,
     nativeTokenSymbol: 'GLMR',
     nativeTokenDecimals: 18,
     throttleCount: 5,
@@ -193,6 +205,7 @@ export const chainConfigs: ChainConfig[] = [
     startBlockNum: 33777609,
     avgBlockTime: 2,
     windowSize: 10000,
+    dormentInterval: MIN_15_IN_MILLIS,
     nativeTokenSymbol: 'MATIC',
     nativeTokenDecimals: 18,
     throttleCount: 5,
