@@ -138,19 +138,23 @@ export class BalanceCMD extends CMD {
         }
       }
 
-      const checkBalance = await this.checkBalanceRepo.findByKey(resourceId);
+      try {
+        const checkBalance = await this.checkBalanceRepo.findByKey(resourceId);
 
-      if (checkBalance) {
-        checkBalance.data = balanceMap[resourceId];
-        checkBalance.amount = balance2;
-        await checkBalance.save();
-      } else {
-        const newCheckBalance = {
-          resourceId,
-          data: balanceMap[resourceId],
-          amount: balance2,
-        } as CheckBalance;
-        await this.checkBalanceRepo.create(newCheckBalance);
+        if (checkBalance) {
+          checkBalance.data = JSON.stringify(balanceMap[resourceId]);
+          checkBalance.amount = balance2;
+          await checkBalance.save();
+        } else {
+          const newCheckBalance = {
+            resourceId,
+            data: JSON.stringify(balanceMap[resourceId]),
+            amount: balance2,
+          } as CheckBalance;
+          await this.checkBalanceRepo.create(newCheckBalance);
+        }
+      } catch (e) {
+        console.warn(e.message)
       }
 
       console.info('----------------------');

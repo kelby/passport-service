@@ -11,8 +11,8 @@ export class CheckBalanceRepo {
   //   return this.model.exists({ key });
   // }
 
-  public async findByKey(key: String) {
-    return this.model.findOne({ key });
+  public async findByKey(resourceId: string) {
+    return this.model.findOne({ resourceId });
   }
 
   // public async countByHomeAndDest(home, dest: number) {
