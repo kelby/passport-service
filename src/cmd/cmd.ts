@@ -4,6 +4,7 @@ import { Logger } from 'pino';
 import { ChainConfig, Network, getChainConfig } from '../const';
 import { DepositRepo, HeadRepo, ProposalRepo, SignaturePassRepo, SubmitSignatureRepo } from '../repo';
 import { sleep } from '../utils';
+import { CheckBalanceRepo } from '../repo/checkBalance.repo';
 
 export abstract class CMD {
   public log: Logger;
@@ -24,6 +25,7 @@ export abstract class CMD {
   protected signaturePassRepo = new SignaturePassRepo();
   protected depositRepo = new DepositRepo();
   protected proposalRepo = new ProposalRepo();
+  protected checkBalanceRepo = new CheckBalanceRepo();
 
   abstract start();
 
@@ -32,9 +34,11 @@ export abstract class CMD {
     if (rootLogger) {
       this.log = rootLogger.child({ cmd: this.name });
     }
-    this.network = network;
-    this.config = getChainConfig(network);
-    this.provider = new ethers.providers.JsonRpcProvider(this.config.rpcUrl);
+    if (network) {
+      this.network = network;
+      this.config = getChainConfig(network);
+      this.provider = new ethers.providers.JsonRpcProvider(this.config.rpcUrl);
+    }
   }
 
   protected async throttle() {

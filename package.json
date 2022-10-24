@@ -49,6 +49,7 @@
   },
   "scripts": {
     "start": "ts-node src/main.ts",
+    "balance": "ts-node src/cmd/balance.ts",
     "build": "rm -fr dist && tsc -p ."
   },
   "bin": {

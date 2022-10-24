@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { BalanceCMD } from './cmd/balance';
+
 require('./utils/validateEnv');
 
 import { Option } from 'commander';
@@ -34,6 +36,13 @@ const runSync = async (options) => {
 
 const runRelay = async (options) => {
   const cmd = new RelayCMD(rootLogger);
+  await connectDB();
+  await cmd.start();
+  await disconnect();
+};
+
+const runBalance = async (options) => {
+  const cmd = new BalanceCMD(rootLogger);
   await connectDB();
   await cmd.start();
   await disconnect();
@@ -76,6 +85,7 @@ program
   .action(runSync);
 
 program.command('relay').action(runRelay);
+program.command('balance').action(runBalance);
 
 program
   .command('api')
