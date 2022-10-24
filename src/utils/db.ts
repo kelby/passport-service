@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 
+require('dotenv').config();
+
 const { MONGO_USER, MONGO_PWD, MONGO_PATH, MONGO_SSL_CA } = process.env;
 
 export const connectDB = async () => {
@@ -10,11 +12,11 @@ export const connectDB = async () => {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useCreateIndex: true,
-    useFindAndModify: false,
+    useFindAndModify: false
   };
   let query: { [key: string]: string } = {};
   query['retryWrites'] = 'false';
-  if (MONGO_SSL_CA != '') {
+  if (MONGO_SSL_CA && MONGO_SSL_CA != '') {
     const fs = require('fs');
     //Specify the Amazon DocumentDB cert
     var ca = [fs.readFileSync(MONGO_SSL_CA)];
@@ -29,7 +31,7 @@ export const connectDB = async () => {
       useNewUrlParser: true,
       // readConcern: { level: 'majority' },
       // w: 'majority',
-      readPreference: 'primary',
+      readPreference: 'primary'
     };
   }
   let queries = [];
@@ -38,5 +40,10 @@ export const connectDB = async () => {
   }
   let queryStr = queries.join('&');
   // mongoose.set('debug', true);
-  await mongoose.connect(queryStr ? url + '?' + queryStr : url, options);
+  try {
+    await mongoose.connect(queryStr ? url + '?' + queryStr : url, options);
+    console.log('connected to database');
+  } catch (e) {
+    console.error(e.message);
+  }
 };

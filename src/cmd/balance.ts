@@ -163,4 +163,4 @@ export class BalanceCMD extends CMD {
   }
 }
 
-new BalanceCMD(undefined).start();
+// new BalanceCMD(undefined).start();
